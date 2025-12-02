@@ -1,0 +1,16 @@
+C:\Users\sylvain.lecourtois\source\repos\AdventOfCode2025\Day1b\bin\Debug\net8.0\Day1b.exe
+C:\Users\sylvain.lecourtois\source\repos\AdventOfCode2025\Day1b\bin\Debug\net8.0\input.txt
+C:\Users\sylvain.lecourtois\source\repos\AdventOfCode2025\Day1b\bin\Debug\net8.0\test1.txt
+C:\Users\sylvain.lecourtois\source\repos\AdventOfCode2025\Day1b\bin\Debug\net8.0\Day1b.deps.json
+C:\Users\sylvain.lecourtois\source\repos\AdventOfCode2025\Day1b\bin\Debug\net8.0\Day1b.runtimeconfig.json
+C:\Users\sylvain.lecourtois\source\repos\AdventOfCode2025\Day1b\bin\Debug\net8.0\Day1b.dll
+C:\Users\sylvain.lecourtois\source\repos\AdventOfCode2025\Day1b\bin\Debug\net8.0\Day1b.pdb
+C:\Users\sylvain.lecourtois\source\repos\AdventOfCode2025\Day1b\obj\Debug\net8.0\Day1b.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\sylvain.lecourtois\source\repos\AdventOfCode2025\Day1b\obj\Debug\net8.0\Day1b.AssemblyInfoInputs.cache
+C:\Users\sylvain.lecourtois\source\repos\AdventOfCode2025\Day1b\obj\Debug\net8.0\Day1b.AssemblyInfo.cs
+C:\Users\sylvain.lecourtois\source\repos\AdventOfCode2025\Day1b\obj\Debug\net8.0\Day1b.csproj.CoreCompileInputs.cache
+C:\Users\sylvain.lecourtois\source\repos\AdventOfCode2025\Day1b\obj\Debug\net8.0\Day1b.dll
+C:\Users\sylvain.lecourtois\source\repos\AdventOfCode2025\Day1b\obj\Debug\net8.0\refint\Day1b.dll
+C:\Users\sylvain.lecourtois\source\repos\AdventOfCode2025\Day1b\obj\Debug\net8.0\Day1b.pdb
+C:\Users\sylvain.lecourtois\source\repos\AdventOfCode2025\Day1b\obj\Debug\net8.0\Day1b.genruntimeconfig.cache
+C:\Users\sylvain.lecourtois\source\repos\AdventOfCode2025\Day1b\obj\Debug\net8.0\ref\Day1b.dll
