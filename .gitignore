@@ -1,0 +1,8 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs/AdventOfCode2025/copilot-chat/8f0ee413/sessions
+/.vs/AdventOfCode2025/DesignTimeBuild
+/.vs/AdventOfCode2025/FileContentIndex
+/.vs
