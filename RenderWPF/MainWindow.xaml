@@ -1,0 +1,101 @@
+﻿<Window x:Class="WpfShaderDemo.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:WpfShaderDemo"
+        Title="Animation Shader GPU" 
+        Height="850" Width="1000"
+        Background="#1E1E1E">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Contrôles -->
+        <Border Grid.Row="0" Background="#2D2D30" Padding="15" Margin="10">
+            <StackPanel>
+                <!-- Ligne 1: Colormaps et Animations -->
+                <Grid Margin="0,0,0,15">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Center">
+                        <TextBlock Text="Colormap:" Foreground="White" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <ComboBox x:Name="ColorMapCombo" Width="150" Height="30" 
+                                  Margin="5" SelectedIndex="0"
+                                  SelectionChanged="ColorMapCombo_SelectionChanged">
+                            <ComboBoxItem>Jet</ComboBoxItem>
+                            <ComboBoxItem>Hot</ComboBoxItem>
+                            <ComboBoxItem>Viridis</ComboBoxItem>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
+                        <TextBlock Text="Animation:" Foreground="White" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <ComboBox x:Name="AnimationCombo" Width="150" Height="30" 
+                                  Margin="5" SelectedIndex="0"
+                                  SelectionChanged="AnimationCombo_SelectionChanged">
+                            <ComboBoxItem>Vagues</ComboBoxItem>
+                            <ComboBoxItem>Rotation</ComboBoxItem>
+                            <ComboBoxItem>Turbulence</ComboBoxItem>
+                            <ComboBoxItem>Ripple</ComboBoxItem>
+                            <ComboBoxItem>Scroll</ComboBoxItem>
+                            <ComboBoxItem>Zoom</ComboBoxItem>
+                        </ComboBox>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Ligne 2: Vitesse -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,15">
+                    <TextBlock Text="Vitesse:" Foreground="White" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <Slider x:Name="SpeedSlider" Width="300" Minimum="0.1" Maximum="5" Value="1" 
+                            TickFrequency="0.1" IsSnapToTickEnabled="True"
+                            ValueChanged="SpeedSlider_ValueChanged"/>
+                    <TextBlock Text="{Binding ElementName=SpeedSlider, Path=Value, StringFormat='{}{0:F1}x'}" 
+                               Foreground="White" VerticalAlignment="Center" Margin="10,0,0,0" Width="40"/>
+                </StackPanel>
+
+                <!-- Ligne 3: Patterns -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <TextBlock Text="Pattern:" Foreground="White" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <Button Content="Gradient" Tag="gradient" Width="90" Height="30" Margin="5" Click="PatternButton_Click"/>
+                    <Button Content="Grille" Tag="grid" Width="90" Height="30" Margin="5" Click="PatternButton_Click"/>
+                    <Button Content="Damier" Tag="checkers" Width="90" Height="30" Margin="5" Click="PatternButton_Click"/>
+                    <Button Content="Diagonal" Tag="diagonal" Width="90" Height="30" Margin="5" Click="PatternButton_Click"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Image avec shader animé -->
+        <Border Grid.Row="1" Background="#2D2D30" 
+                Margin="20" CornerRadius="5"
+                HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Image x:Name="DataImage" 
+                   Width="800" Height="600"
+                   Stretch="Uniform">
+                <Image.Effect>
+                    <local:AnimatedColorMapEffect x:Name="AnimatedShader" 
+                                                 ColorMapType="0"
+                                                 Time="0"
+                                                 AnimationType="0"
+                                                 AnimationSpeed="1"/>
+                </Image.Effect>
+            </Image>
+        </Border>
+
+        <!-- Info -->
+        <Border Grid.Row="2" Background="#252526" Padding="10" Margin="10">
+            <StackPanel>
+                <TextBlock Foreground="#4EC9B0" FontWeight="Bold" HorizontalAlignment="Center">
+                    ⚡ Animation 100% GPU - Aucun calcul CPU
+                </TextBlock>
+                <TextBlock Foreground="#888" HorizontalAlignment="Center" Margin="0,5,0,0">
+                    Les données sont statiques en mémoire, l'animation se fait entièrement dans le shader HLSL
+                </TextBlock>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>
