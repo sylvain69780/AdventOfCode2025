@@ -32,11 +32,11 @@ namespace WpfShaderDemo
                 typeof(AnimatedColorMapEffect),
                 0);
 
-        public Brush Input
-        {
-            get => (Brush)GetValue(InputProperty);
-            set => SetValue(InputProperty, value);
-        }
+        //public Brush Input
+        //{
+        //    get => (Brush)GetValue(InputProperty);
+        //    set => SetValue(InputProperty, value);
+        //}
 
         public static readonly DependencyProperty ColorMapTypeProperty =
             DependencyProperty.Register(

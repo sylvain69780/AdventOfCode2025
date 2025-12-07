@@ -27,6 +27,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Day6b", "Day6b\Day6b.csproj
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WpfShaderDemo", "RenderWPF\WpfShaderDemo.csproj", "{2E450F31-81A7-4C20-982F-670531993575}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Day7", "Day7\Day7.csproj", "{D0B3BF1B-5236-4FCB-A28D-D2C5B279A745}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Day7b", "Day7b\Day7b.csproj", "{8FF314E9-7BE5-4605-AE40-D0B0C4C636DC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -81,6 +85,14 @@ Global
 		{2E450F31-81A7-4C20-982F-670531993575}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2E450F31-81A7-4C20-982F-670531993575}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2E450F31-81A7-4C20-982F-670531993575}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D0B3BF1B-5236-4FCB-A28D-D2C5B279A745}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D0B3BF1B-5236-4FCB-A28D-D2C5B279A745}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D0B3BF1B-5236-4FCB-A28D-D2C5B279A745}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D0B3BF1B-5236-4FCB-A28D-D2C5B279A745}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8FF314E9-7BE5-4605-AE40-D0B0C4C636DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8FF314E9-7BE5-4605-AE40-D0B0C4C636DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8FF314E9-7BE5-4605-AE40-D0B0C4C636DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8FF314E9-7BE5-4605-AE40-D0B0C4C636DC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
