@@ -62,7 +62,7 @@ static int ComputeHash(int[] array)
 
 
 var inputFile = "test1.txt";
-//inputFile = "input.txt";
+inputFile = "input.txt";
 var input = File.ReadAllLines(inputFile)
     .Select(line => line.Split(' '))
     .Select(line => (diagrams: line[0][1..^1], wiring: line[1..^1].Select(x => x[1..^1].Split(',').Select(x => int.Parse(x)).ToArray()).ToArray(), joltage: line[^1][1..^1].Split(',').Select(x => int.Parse(x)).ToArray()))
@@ -72,36 +72,33 @@ var count = 0;
 foreach (var (_, wiring, joltage) in input)
 {
     Console.WriteLine(string.Join(',', joltage));
-    var vectors = wiring.Select(v => Enumerable.Range(0, joltage.Length).Select(i => v.Contains(i) ? 1 : 0).ToArray()).ToArray();
+    var range = Enumerable.Range(0, joltage.Length);
+    var vectors = wiring.Select(v => range.Select(i => v.Contains(i) ? 1 : 0).ToArray())
+        .OrderByDescending(v => v.Sum())
+        .ToArray();
     foreach (var v in vectors)
         Console.WriteLine(string.Join('-', v));
     var pressed = 0;
+    var combi = new int[vectors.Length]; // combination of vectors / quantity for each vectors
     var stack = new Stack<int[]>();
-    var backtrack = new Stack<int>();
-    var indexes = Enumerable.Range(0, joltage.Length).ToList();
-    var index = indexes.OrderBy(i => vectors.Select(v => v[i]).Sum()).Where(i => joltage[i] != 0).First();
-    foreach (var v in vectors.Where(a => a[index] == 1))
-    {
-        stack.Push(v);
-        backtrack.Push(1);
-    }
-    var found = false;
-    while (!found)
+    stack.Push(combi);
+    while (stack.Count>0)
     {
         var t = stack.Pop();
-        pressed = backtrack.Pop();
-        if (Enumerable.Range(0, joltage.Length).All(i => joltage[i] == t[i]))
+        pressed = t.Sum();
+
+        var res = range.Select(i => t.Select((v,j) => vectors[j][i] * v).Sum()).ToArray();
+        if (range.All(a => res[a] == joltage[a]))
         {
-            found = true;
             break;
         }
-        index = indexes.OrderBy(i => vectors.Select(v => v[i]).Sum())
-            .Where(i => t[i] != joltage[i])
-            .First();
-        foreach (var v in vectors.Where(a => a[index] == 1))
+        for (var i = 0; i<vectors.Length; i++)
         {
-            stack.Push(v.Select((a, i) => a + t[i]).ToArray());
-            backtrack.Push(pressed + 1);
+            var nt = t.ToArray();
+            nt[i]++;
+            var v = vectors[i];
+            if (range.All(j => v[j] + res[j] <= joltage[j]))
+                stack.Push(nt);
         }
     }
 
