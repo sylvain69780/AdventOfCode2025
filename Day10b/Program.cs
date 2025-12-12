@@ -62,7 +62,7 @@ static int ComputeHash(int[] array)
 
 
 var inputFile = "test1.txt";
-inputFile = "input.txt";
+//inputFile = "input.txt";
 var input = File.ReadAllLines(inputFile)
     .Select(line => line.Split(' '))
     .Select(line => (diagrams: line[0][1..^1], wiring: line[1..^1].Select(x => x[1..^1].Split(',').Select(x => int.Parse(x)).ToArray()).ToArray(), joltage: line[^1][1..^1].Split(',').Select(x => int.Parse(x)).ToArray()))
@@ -76,47 +76,35 @@ foreach (var (_, wiring, joltage) in input)
     foreach (var v in vectors)
         Console.WriteLine(string.Join('-', v));
     var pressed = 0;
-    var queue = new Queue<int[]>();
-    queue.Enqueue(new int[joltage.Length]);
+    var stack = new Stack<int[]>();
+    var backtrack = new Stack<int>();
+    var indexes = Enumerable.Range(0, joltage.Length).ToList();
+    var index = indexes.OrderBy(i => vectors.Select(v => v[i]).Sum()).Where(i => joltage[i] != 0).First();
+    foreach (var v in vectors.Where(a => a[index] == 1))
+    {
+        stack.Push(v);
+        backtrack.Push(1);
+    }
     var found = false;
     while (!found)
     {
-        pressed++;
-        var queue2 = new Queue<int[]>();
-        var visited = new Dictionary<int, int[]>();
-
-        while (queue.Count > 0)
+        var t = stack.Pop();
+        pressed = backtrack.Pop();
+        if (Enumerable.Range(0, joltage.Length).All(i => joltage[i] == t[i]))
         {
-            var pos = queue.Dequeue();
-            if (Enumerable.Range(0, joltage.Length).All(a => pos[a] == joltage[a]))
-            {
-                pressed--;
-                found = true; break;
-            }
-            foreach (var b in wiring)
-            {
-                var pos2 = pos.ToArray();
-                foreach (var i in b)
-                    pos2[i]++;
-                var hash = ComputeHash(pos2);
-                if (visited.TryGetValue(hash, out var oldpos))
-                {
-                    if (Enumerable.Range(0, joltage.Length).All(a => pos2[a] == oldpos[a]))
-                        continue;
-                }
-                else
-                    visited.Add(hash, pos2);
-                if (Enumerable.Range(0, joltage.Length).All(a => pos2[a] <= joltage[a]))
-                    queue2.Enqueue(pos2);
-
-            }
+            found = true;
+            break;
         }
-        if (!found && queue2.Count == 0)
-            throw new IndexOutOfRangeException();
-        foreach (var e in queue2.OrderBy(x => Enumerable.Range(0, joltage.Length).Sum(a => (joltage[a] - x[a]) * (joltage[a] - x[a]))).Take(200000))
-            queue.Enqueue(e);
-        //queue = queue2;
+        index = indexes.OrderBy(i => vectors.Select(v => v[i]).Sum())
+            .Where(i => t[i] != joltage[i])
+            .First();
+        foreach (var v in vectors.Where(a => a[index] == 1))
+        {
+            stack.Push(v.Select((a, i) => a + t[i]).ToArray());
+            backtrack.Push(pressed + 1);
+        }
     }
+
     Console.WriteLine($"pressed = {pressed}");
     count += pressed;
 }
