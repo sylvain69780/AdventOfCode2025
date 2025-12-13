@@ -1,8 +1,9 @@
 ﻿
+using System.Collections.Immutable;
 using System.Security.Cryptography;
 
 var inputFile = "test1.txt";
-inputFile = "input.txt";
+//inputFile = "input.txt";
 var input = File.ReadAllLines(inputFile)
     .Select(line => line.Split(' '))
     .Select(line => (diagrams: line[0][1..^1], wiring: line[1..^1].Select(x => x[1..^1].Split(',').Select(x => int.Parse(x)).ToArray()).ToArray(), joltage: line[^1][1..^1].Split(',').Select(x => int.Parse(x)).ToArray()))
@@ -18,21 +19,27 @@ foreach (var (_, wiring, joltage) in input)
     var stack = new Stack<int[]>();
     var combi = new int[wiring.Length]; // combination of vectors / quantity for each vectors
     stack.Push(combi);
-    var ranks = new Stack<int>();
-    ranks.Push(0);
+    var currentWires = new Stack<int>();
+    currentWires.Push(0);
     var found = false;
     var pd = int.MaxValue;
     var cardinality = range.Select(i => wiring.Sum(w => w.Contains(i) ? 1 : 0)).ToArray();
-    var transco = range.OrderBy(i => cardinality[i]).ToArray();
-    while (stack.Count > 0)
+    var wiring2 = wiring.OrderBy(w => cardinality.Where((c, i) => w.Contains(i)).Min()).ToArray();
+    wiring2 = wiring
+        .OrderBy(w => cardinality.Where((c, i) => w.Contains(i)).Min() == 1 ? 1 : 2)
+        .ThenByDescending(w => w.Length)
+        .ThenBy(w => cardinality.Where((c, i) => w.Contains(i)).Min())
+        .ToArray();
+    var vectors = wiring2.Select(w => range.Select(i => w.Contains(i) ? 1 : 0).ToArray()).ToArray();
+    while (stack.Count > 0) 
     {
         var t = stack.Pop();
-        var rank = ranks.Pop();
+        var currentWire = currentWires.Pop();
         pressed = t.Sum();
-        var rese = range.Select(i => t.Select((v, j) => (wiring[j].Contains(i) ? 1 : 0) * v).Sum());
-        if (rese.Zip(joltage,(a,b) => b-a).Any(x => x < 0) )
-            continue;
+        var rese = range.Select(i => t.Select((v, j) => vectors[j][i] * v).Sum());
         var res = rese.ToArray();
+        if (res.Zip(joltage, (a, b) => b - a).Any(x => x < 0))
+            continue;
         if (range.All(a => res[a] == joltage[a]))
         {
             found = true;
@@ -47,32 +54,22 @@ foreach (var (_, wiring, joltage) in input)
             Console.WriteLine("dist  " + string.Join(',', range.Select(i => joltage[i] - res[i])));
             pd = d;
         }
-        var selection = wiring.Where(w => w.Contains(transco[rank]))
-            .OrderBy(w => w.Length)
-            .Select(w => Array.IndexOf(wiring, w)).ToArray();
-        foreach (var s in selection)
+        if (currentWire >= wiring2.Length)
+            continue;
+        var maxAmount = res.Select((v, i) => joltage[i] - v)
+            .Where((v,i) => vectors[currentWire][i] == 1 )
+            .Min();
+        //        for (var i = maxAmount; i >= 0; --i)
+        foreach (var i in Enumerable.Range(0,maxAmount+1) /*.OrderBy(a => Math.Abs(a - a/2))*/)
         {
-            var maxAmount = res.Select((v, i) => joltage[i] - v).Where((v, i) => wiring[s].Contains(i)).Min();
-            for (var i = 0; i < maxAmount; i++)
-            {
-                var nt = t.ToArray();
-                nt[s] += i + 1;
-                stack.Push(nt);
-            }
+            var nt = t.ToArray();
+            nt[currentWire] += i;
+            stack.Push(nt);
+            currentWires.Push(currentWire + 1);
         }
-        //foreach (var tuple in CombinationGenerator.GenerateCombinations(joltage[rank] - res[rank], selection.Length))
-        //{
-        //    var nt = t.ToArray();
-        //    for (var i = 0; i < tuple.Length; i++)
-        //    {
-        //        var w = selection[i];
-        //        nt[w] += tuple[i];
-        //    }
-        //    stack.Push(nt);
-        //}
     }
     if (!found)
-        throw new Exception("coucou");
+        throw new Exception("No solution");
 
     Console.WriteLine($"pressed = {pressed}");
     count += pressed;
