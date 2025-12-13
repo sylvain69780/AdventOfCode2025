@@ -1,67 +1,4 @@
-﻿//var inputFile = "test1.txt";
-//inputFile = "input.txt";
-//var input = File.ReadAllLines(inputFile)
-//    .Select(line => line.Split(' '))
-//    .Select(line => (diagrams: line[0][1..^1], wiring: line[1..^1].Select(x => x[1..^1].Split(',').Select(x => int.Parse(x)).ToArray()).ToArray(), joltage: line[^1][1..^1].Split(',').Select(x => int.Parse(x)).ToArray()))
-//    .ToArray();
-
-//var count = 0;
-//foreach (var (_, wiring, joltage) in input)
-//{
-//    Console.WriteLine(string.Join(',', joltage));
-//    var pressed = 1;
-//    var stack = new Stack<int[]>();
-//    var backtrack = new Stack<int>();
-//    stack.Push(new int[joltage.Length]);
-//    backtrack.Push(1);
-//    while (true)
-//    {
-//        var pos = stack.Pop();
-//        var deep = backtrack.Pop();
-//        if (Enumerable.Range(0, joltage.Length).All(a => pos[a] == joltage[a]))
-//        {
-//            pressed = deep-1;
-//            break;
-//        }
-//        var list = new List<int[]>();
-//        foreach (var b in wiring)
-//        {
-//            var pos2 = pos.ToArray();
-//            foreach (var i in b)
-//                pos2[i]++;
-//            if (Enumerable.Range(0, joltage.Length).All(a => pos2[a] <= joltage[a]))
-//                list.Add(pos2);
-//        }
-//        if (list.Count > 0)
-//        {
-//            foreach (var item in list.OrderByDescending(x => Enumerable.Range(0, joltage.Length).Sum(a => joltage[a] - x[a])))
-//            {
-//                stack.Push(item);
-//                backtrack.Push(deep + 1);
-//            }
-//        }
-//    }
-//    Console.WriteLine($"pressed = {pressed}");
-//    count += pressed;
-//}
-
-//Console.WriteLine(count);
-
-static int ComputeHash(int[] array)
-{
-    if (array == null)
-        return 0;
-
-    var hashCode = new HashCode();
-    foreach (var item in array)
-    {
-        hashCode.Add(item);
-    }
-    return hashCode.ToHashCode();
-}
-
-
-var inputFile = "test1.txt";
+﻿var inputFile = "test1.txt";
 inputFile = "input.txt";
 var input = File.ReadAllLines(inputFile)
     .Select(line => line.Split(' '))
@@ -82,23 +19,40 @@ foreach (var (_, wiring, joltage) in input)
     var combi = new int[vectors.Length]; // combination of vectors / quantity for each vectors
     var stack = new Stack<int[]>();
     stack.Push(combi);
+    var backTrack = new Stack<int>();
+    backTrack.Push(0);
+    var pd = int.MaxValue;
+    var cache = new Dictionary<int, int[]>();
+    var rand = new Random();
     while (stack.Count>0)
     {
         var t = stack.Pop();
+        var back = backTrack.Pop();
         pressed = t.Sum();
-
         var res = range.Select(i => t.Select((v,j) => vectors[j][i] * v).Sum()).ToArray();
+        var d = range.Select(i => joltage[i] - res[i]).Select(x => x).Sum();
+        if ( d < pd )
+        {
+            Console.WriteLine($"dist  {d}");
+            Console.WriteLine("combi " + string.Join(',', t));
+            Console.WriteLine("res   " + string.Join(',', res));
+            Console.WriteLine("dist  " + string.Join(',', range.Select(i => joltage[i] - res[i])));
+            pd = d;
+        }
         if (range.All(a => res[a] == joltage[a]))
         {
             break;
         }
-        for (var i = 0; i<vectors.Length; i++)
+        for (var i = vectors.Length-1; i >= back; --i)
         {
             var nt = t.ToArray();
             nt[i]++;
             var v = vectors[i];
             if (range.All(j => v[j] + res[j] <= joltage[j]))
+            {
                 stack.Push(nt);
+                backTrack.Push(i);
+            }
         }
     }
 
