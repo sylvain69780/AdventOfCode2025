@@ -1,4 +1,7 @@
-﻿var inputFile = "test1.txt";
+﻿
+using System.Security.Cryptography;
+
+var inputFile = "test1.txt";
 inputFile = "input.txt";
 var input = File.ReadAllLines(inputFile)
     .Select(line => line.Split(' '))
@@ -10,27 +13,26 @@ foreach (var (_, wiring, joltage) in input)
 {
     Console.WriteLine(string.Join(',', joltage));
     var range = Enumerable.Range(0, joltage.Length);
-    var vectors = wiring.Select(v => range.Select(i => v.Contains(i) ? 1 : 0).ToArray())
-        .OrderByDescending(v => v.Sum())
-        .ToArray();
-    foreach (var v in vectors)
-        Console.WriteLine(string.Join('-', v));
     var pressed = 0;
-    var combi = new int[vectors.Length]; // combination of vectors / quantity for each vectors
+
     var stack = new Stack<int[]>();
+    var combi = new int[wiring.Length]; // combination of vectors / quantity for each vectors
     stack.Push(combi);
-    var backTrack = new Stack<int>();
-    backTrack.Push(0);
+    var ranks = new Stack<int>();
+    ranks.Push(0);
     var pd = int.MaxValue;
-    var cache = new Dictionary<int, int[]>();
+    var found = false;
     while (stack.Count>0)
     {
         var t = stack.Pop();
-        var back = backTrack.Pop();
+        var rank = ranks.Pop();
         pressed = t.Sum();
-        var res = range.Select(i => t.Select((v,j) => vectors[j][i] * v).Sum()).ToArray();
+        var res = range.Select(i => t.Select((v, j) => (wiring[j].Contains(i) ? 1 : 0) * v).Sum())
+            .ToArray();
+        if (range.Any(i => res[i] > joltage[i]))
+            continue;
         var d = range.Select(i => joltage[i] - res[i]).Select(x => x).Sum();
-        if ( d < pd )
+        if (d < pd)
         {
             Console.WriteLine($"dist  {d}");
             Console.WriteLine("combi " + string.Join(',', t));
@@ -40,20 +42,32 @@ foreach (var (_, wiring, joltage) in input)
         }
         if (range.All(a => res[a] == joltage[a]))
         {
+            found = true;
             break;
         }
-        for (var i = vectors.Length-1; i >= back; --i)
+        var selection = wiring.Where(w => w.Contains(rank))
+            .OrderByDescending(w => w.Length)
+            .Select(w => Array.IndexOf(wiring,w)).ToArray();
+        if (res[rank]  == joltage[rank])
+        {
+            stack.Push(t);
+            ranks.Push(rank + 1);
+            continue;
+        }
+        foreach (var tuple in CombinationGenerator.GenerateCombinations(joltage[rank] - res[rank], selection.Length))
         {
             var nt = t.ToArray();
-            nt[i]++;
-            var v = vectors[i];
-            if (range.All(j => v[j] + res[j] <= joltage[j]))
+            for (var i = 0; i < tuple.Length; i++)
             {
-                stack.Push(nt);
-                backTrack.Push(i);
+                var w = selection[i];
+                nt[w] += tuple[i];
             }
+            stack.Push(nt);
+            ranks.Push(rank + 1);
         }
     }
+    if (!found)
+        throw new Exception("coucou");
 
     Console.WriteLine($"pressed = {pressed}");
     count += pressed;
