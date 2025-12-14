@@ -1,4 +1,7 @@
-﻿using System.Diagnostics;
+﻿// Not workingnngngngn
+
+
+using System.Diagnostics;
 
 var inputFile = "test1.txt";
 //inputFile = "input.txt";
