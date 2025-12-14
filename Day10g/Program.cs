@@ -1,4 +1,19 @@
 ﻿using System.Diagnostics;
+ static byte[] ComputeByteArrayHash(int[] array)
+{
+    if (array == null)
+        return Array.Empty<byte>();
+
+    var hashCode = new HashCode();
+    foreach (var item in array)
+    {
+        hashCode.Add(item);
+    }
+
+    // Récupérer le hash sous forme de byte[]
+    int hash = hashCode.ToHashCode();
+    return BitConverter.GetBytes(hash);
+}
 
 var inputFile = "test1.txt";
 inputFile = "input.txt";
@@ -28,6 +43,7 @@ foreach (var (_, wiring, joltage) in input)
     var selectivity = vectors.Select(v => range.Select(i => cardinality[i]).Where((c,i) => v[i] == 1).Min())
         .ToArray();
     var pd = int.MaxValue;
+    var cache = new Dictionary<int, int>();
     while (stack.Count > 0)
     {
         var t = stack.Pop();
@@ -44,6 +60,8 @@ foreach (var (_, wiring, joltage) in input)
             Console.WriteLine($"best = {pressed}");
             continue;
         }
+        var delta = range.Select(i => joltage[i] - res[i]).ToArray();
+        var len = t.Sum();
         var d = range.Select(i => joltage[i] - res[i]).Select(x => x).Sum();
         if (d < pd)
         {
@@ -54,7 +72,7 @@ foreach (var (_, wiring, joltage) in input)
             pd = d;
         }
         var candidates = Enumerable.Range(0, vectors.Length)
-        //    .Where(i => i == current || !backtrack.Contains(i))
+            .Where(i => i == current || !backtrack.Contains(i))
             .Where(i => range.All(j => joltage[j] - res[j] - vectors[i][j] >= 0))
             //.OrderByDescending(i => range.Sum(j => joltage[j] - res[j] - vectors[i][j]))
             .OrderBy(i => range.Where(j => vectors[i][j] == 1).Sum(j => joltage[j] - res[j]))
