@@ -1,18 +1,15 @@
 ﻿using System.Diagnostics;
- static byte[] ComputeByteArrayHash(int[] array)
+ static int ComputeHash(int[] array)
 {
     if (array == null)
-        return Array.Empty<byte>();
+        return 0;
 
     var hashCode = new HashCode();
     foreach (var item in array)
     {
         hashCode.Add(item);
     }
-
-    // Récupérer le hash sous forme de byte[]
-    int hash = hashCode.ToHashCode();
-    return BitConverter.GetBytes(hash);
+    return hashCode.ToHashCode();
 }
 
 var inputFile = "test1.txt";
@@ -44,6 +41,7 @@ foreach (var (_, wiring, joltage) in input)
         .ToArray();
     var pd = int.MaxValue;
     var cache = new Dictionary<int, int>();
+    var explored = new HashSet<int>();
     while (stack.Count > 0)
     {
         var t = stack.Pop();
@@ -61,7 +59,28 @@ foreach (var (_, wiring, joltage) in input)
             continue;
         }
         var delta = range.Select(i => joltage[i] - res[i]).ToArray();
-        var len = t.Sum();
+        var hash2 = ComputeHash(delta);
+        if (cache.TryGetValue(hash2, out var result))
+        {
+            if (result + currentPressed < pressed)
+                pressed = result + currentPressed;
+            found = true;
+            Console.WriteLine($"best = {pressed}");
+            continue;
+        }
+        if (explored.Contains(hash2))
+            continue;
+        else
+            explored.Add(hash2);
+        if (pressed < 10000)
+        {
+            var hash = ComputeHash(res);
+            if (!cache.TryAdd(hash, currentPressed))
+            {
+                continue;
+            }
+        }
+
         var d = range.Select(i => joltage[i] - res[i]).Select(x => x).Sum();
         if (d < pd)
         {
@@ -72,7 +91,7 @@ foreach (var (_, wiring, joltage) in input)
             pd = d;
         }
         var candidates = Enumerable.Range(0, vectors.Length)
-            .Where(i => i == current || !backtrack.Contains(i))
+            //.Where(i => i == current || !backtrack.Contains(i))
             .Where(i => range.All(j => joltage[j] - res[j] - vectors[i][j] >= 0))
             //.OrderByDescending(i => range.Sum(j => joltage[j] - res[j] - vectors[i][j]))
             .OrderBy(i => range.Where(j => vectors[i][j] == 1).Sum(j => joltage[j] - res[j]))

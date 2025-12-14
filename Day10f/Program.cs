@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 
 var inputFile = "test1.txt";
-inputFile = "input.txt";
+//inputFile = "input.txt";
 var input = File.ReadAllLines(inputFile)
     .Select(line => line.Split(' '))
     .Select(line => (diagrams: line[0][1..^1], wiring: line[1..^1].Select(x => x[1..^1].Split(',').Select(x => int.Parse(x)).ToArray()).ToArray(), joltage: line[^1][1..^1].Split(',').Select(x => int.Parse(x)).ToArray()))
@@ -10,13 +10,20 @@ var input = File.ReadAllLines(inputFile)
 var count = 0;
 foreach (var (_, wiring, joltage) in input)
 {
+    int pressed = Solve(wiring, joltage);
+    count += pressed;
+}
+
+Console.WriteLine(count);
+
+static int Solve(int[][] wiring, int[] joltage)
+{
     var watch = Stopwatch.StartNew();
     Console.WriteLine(string.Join(',', joltage));
     var range = Enumerable.Range(0, joltage.Length);
 
     var stack = new Stack<int[]>();
-    var combi = new int[wiring.Length]; // combination of vectors / quantity for each vectors
-    stack.Push(combi);
+    stack.Push(new int[wiring.Length]);
     var backtrack = new Stack<int>();
     backtrack.Push(-1);
     var found = false;
@@ -24,18 +31,15 @@ foreach (var (_, wiring, joltage) in input)
     foreach (var v in vectors)
         Console.WriteLine(string.Join('-', v));
     var pressed = int.MaxValue;
-    var cardinality = range.Select(i => wiring.Sum(w => w.Contains(i) ? 1 : 0)).ToArray();
-    var selectivity = vectors.Select(v => range.Select(i => cardinality[i]).Where((c,i) => v[i] == 1).Min())
-        .ToArray();
     var pd = int.MaxValue;
     while (stack.Count > 0)
     {
-        var t = stack.Pop();
+        var combination = stack.Pop();
         var current = backtrack.Pop();
-        var currentPressed = t.Sum();
+        var currentPressed = combination.Sum();
         if (currentPressed >= pressed)
             continue;
-        var rese = range.Select(i => t.Select((v, j) => vectors[j][i] * v).Sum());
+        var rese = range.Select(i => combination.Select((v, j) => vectors[j][i] * v).Sum());
         var res = rese.ToArray();
         if (range.All(a => res[a] == joltage[a]))
         {
@@ -48,34 +52,34 @@ foreach (var (_, wiring, joltage) in input)
         if (d < pd)
         {
             Console.WriteLine($"dist  {d}");
-            Console.WriteLine("combi " + string.Join(',', t));
+            Console.WriteLine("combi " + string.Join(',', combination));
             Console.WriteLine("res   " + string.Join(',', res));
             Console.WriteLine("dist  " + string.Join(',', range.Select(i => joltage[i] - res[i])));
             pd = d;
         }
         var candidates = Enumerable.Range(0, vectors.Length)
-        //    .Where(i => i == current || !backtrack.Contains(i))
+            .Where(i => i == current || !backtrack.Contains(i))
             .Where(i => range.All(j => joltage[j] - res[j] - vectors[i][j] >= 0))
             //.OrderByDescending(i => range.Sum(j => joltage[j] - res[j] - vectors[i][j]))
-            .OrderBy(i => range.Where(j => vectors[i][j] == 1).Sum(j => joltage[j] - res[j]))
+            .OrderBy(i => range.Where(j => vectors[i][j] == 1).Sum(j => joltage[j] - res[j])) // distance function
             //            .OrderByDescending(i => selectivity[i])
             .ToArray();
-        if (candidates.Length ==1)
+        if (candidates.Length == 1)
         {
             var v = candidates[0];
             var maxAmount = res.Select((a, i) => joltage[i] - a)
                 .Where((a, i) => vectors[v][i] == 1)
                 .Min();
-                var nt = t.ToArray();
-                nt[v]+=maxAmount;
-                stack.Push(nt);
-                backtrack.Push(v);
+            var nt = combination.ToArray();
+            nt[v] += maxAmount;
+            stack.Push(nt);
+            backtrack.Push(v);
             continue;
         }
 
         foreach (var v in candidates)
         {
-            var nt = t.ToArray();
+            var nt = combination.ToArray();
             nt[v]++;
             stack.Push(nt);
             backtrack.Push(v);
@@ -85,7 +89,5 @@ foreach (var (_, wiring, joltage) in input)
         throw new Exception("No solution");
     watch.Stop();
     Console.WriteLine($"pressed = {pressed} elapsed {watch.ElapsedMilliseconds}");
-    count += pressed;
+    return pressed;
 }
-
-Console.WriteLine(count);
