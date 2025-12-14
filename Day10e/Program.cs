@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 using System.Security.Cryptography;
 
 var inputFile = "test1.txt";
-//inputFile = "input.txt";
+inputFile = "input.txt";
 var input = File.ReadAllLines(inputFile)
     .Select(line => line.Split(' '))
     .Select(line => (diagrams: line[0][1..^1], wiring: line[1..^1].Select(x => x[1..^1].Split(',').Select(x => int.Parse(x)).ToArray()).ToArray(), joltage: line[^1][1..^1].Split(',').Select(x => int.Parse(x)).ToArray()))
@@ -31,6 +31,8 @@ foreach (var (_, wiring, joltage) in input)
         .ThenBy(w => cardinality.Where((c, i) => w.Contains(i)).Min())
         .ToArray();
     var vectors = wiring2.Select(w => range.Select(i => w.Contains(i) ? 1 : 0).ToArray()).ToArray();
+    foreach (var v in vectors)
+        Console.WriteLine(string.Join('-', v));
     while (stack.Count > 0) 
     {
         var t = stack.Pop();
@@ -38,8 +40,8 @@ foreach (var (_, wiring, joltage) in input)
         pressed = t.Sum();
         var rese = range.Select(i => t.Select((v, j) => vectors[j][i] * v).Sum());
         var res = rese.ToArray();
-        if (res.Zip(joltage, (a, b) => b - a).Any(x => x < 0))
-            continue;
+        //if (res.Zip(joltage, (a, b) => b - a).Any(x => x < 0))
+        //    continue;
         if (range.All(a => res[a] == joltage[a]))
         {
             found = true;
@@ -59,6 +61,14 @@ foreach (var (_, wiring, joltage) in input)
         var maxAmount = res.Select((v, i) => joltage[i] - v)
             .Where((v,i) => vectors[currentWire][i] == 1 )
             .Min();
+        // fin de combinaison
+        if (currentWire == wiring2.Length-1 && maxAmount > 0)
+        {
+            var nt = t.ToArray();
+            nt[currentWire] += maxAmount;
+            stack.Push(nt);
+            currentWires.Push(currentWire + 1);
+        }
         //        for (var i = maxAmount; i >= 0; --i)
         foreach (var i in Enumerable.Range(0,maxAmount+1) /*.OrderBy(a => Math.Abs(a - a/2))*/)
         {
