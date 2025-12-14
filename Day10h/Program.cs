@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 
 var inputFile = "test1.txt";
-inputFile = "input.txt";
+//inputFile = "input.txt";
 var input = File.ReadAllLines(inputFile)
     .Select(line => line.Split(' '))
     .Select(line => (diagrams: line[0][1..^1], wiring: line[1..^1].Select(x => x[1..^1].Split(',').Select(x => int.Parse(x)).ToArray()).ToArray(), joltage: line[^1][1..^1].Split(',').Select(x => int.Parse(x)).ToArray()))
@@ -35,8 +35,6 @@ static int Solve(int[][] wiring, int[] joltage)
     Console.WriteLine(string.Join(',', joltage));
     var range = Enumerable.Range(0, joltage.Length);
 
-    var stack = new Stack<int[]>();
-    stack.Push(new int[wiring.Length]);
     var backtrack = new Stack<int>();
     backtrack.Push(-1);
     var found = false;
@@ -44,39 +42,27 @@ static int Solve(int[][] wiring, int[] joltage)
     foreach (var v in vectors)
         Console.WriteLine(string.Join('-', v));
     var pd = int.MaxValue;
- //   var vectorCache = new Dictionary<int, int>();
-    var visitedCache = new HashSet<int>();
 
     // max value - does not change anything
     var pressed = int.MaxValue;
-    pressed = vectors.Select((v, i) => joltage.Select((jo, j) => v[j] * jo).Where(x => x != 0).Min()).Sum();
+    var maxValues = vectors.Select((v, i) => joltage.Select((jo, j) => v[j] * jo).Where(x => x != 0).Min()).ToArray();
+    var stack = new Stack<int[]>();
+//    stack.Push(new int[wiring.Length]);
+    stack.Push(maxValues);
+    var visitedCache = new HashSet<int>();
 
     while (stack.Count > 0)
     {
         var combination = stack.Pop();
-        var current = backtrack.Pop();
         var currentPressed = combination.Sum();
         if (currentPressed >= pressed)
             continue;
+        var hash = ComputeHash(combination);
+        visitedCache.Add(hash);
+
         var rese = range.Select(i => combination.Select((v, j) => vectors[j][i] * v).Sum());
         var res = rese.ToArray();
-        var delta = res.Zip(joltage,(a,b) => b-a).ToArray();
-        if (delta.Sum() < 50)
-        {
-            // vector cache test
-            var hash = ComputeHash(delta);
-            //if (vectorCache.TryGetValue(hash, out var vector))
-            //{
-            //    found = true;
-            //    if ( currentPressed + vector < pressed)
-            //        pressed = currentPressed + vector;
-            //    Console.WriteLine($"cache hit = {pressed}");
-            //    continue;
-            //}
-            // visited cache test
-            if (!visitedCache.Add(hash))
-                continue;
-        }
+        var delta = res.Zip(joltage,(a,b) => a-b).ToArray();
         if (delta.All(a => a == 0))
         {
             found = true;
@@ -84,7 +70,8 @@ static int Solve(int[][] wiring, int[] joltage)
             Console.WriteLine($"best = {pressed}");
             continue;
         }
-        var d = range.Select(i => joltage[i] - res[i]).Select(x => x).Sum();
+
+        var d = range.Select(i => Math.Abs(joltage[i] - res[i])).Select(x => x).Sum();
         if (d < pd)
         {
             Console.WriteLine($"dist  {d}");
@@ -94,42 +81,26 @@ static int Solve(int[][] wiring, int[] joltage)
             pd = d;
         }
 
-        //// cache test
-        //if (res.Sum() < 30)
-        //{
-        //    var hash = ComputeHash(res);
-        //    vectorCache.TryAdd(hash,pressed);
-        //}
-
-
-
-
-        var candidates = Enumerable.Range(0, vectors.Length)
-           .Where(i => i == current || !backtrack.Contains(i))
-            .Where(i => range.All(j => joltage[j] - res[j] - vectors[i][j] >= 0))
+        var candidates = Enumerable.Range(0, combination.Length)
+            .Select(i => { var c = combination.ToArray(); c[i]++; return c; })
+            .Concat(Enumerable.Range(0, combination.Length)
+            .Select(i => { var c = combination.ToArray(); c[i]--; return c; })
+            );
+//           .Where(i => i == current || !backtrack.Contains(i))
+ //           .Where(i => range.All(j => joltage[j] - res[j] - vectors[i][j] >= 0))
             //.OrderByDescending(i => range.Sum(j => joltage[j] - res[j] - vectors[i][j]))
-            .OrderBy(i => range.Where(j => vectors[i][j] == 1).Sum(j => joltage[j] - res[j])) // distance function
-                                                                                              //            .OrderByDescending(i => selectivity[i])
-            .ToArray();
-        if (candidates.Length == 1)
-        {
-            var v = candidates[0];
-            var maxAmount = res.Select((a, i) => joltage[i] - a)
-                .Where((a, i) => vectors[v][i] == 1)
-                .Min();
-            var nt = combination.ToArray();
-            nt[v] += maxAmount;
-            stack.Push(nt);
-            backtrack.Push(v);
-            continue;
-        }
+            //.OrderBy(i => range.Where(j => vectors[i][j] == 1).Sum(j => Math.Abs(res[j] - joltage[j]))) // distance function
+            ////            .OrderByDescending(i => selectivity[i])
+            //.ToArray();
 
-        foreach (var v in candidates)
+        foreach (var c in candidates.OrderByDescending(x => {
+            var resx = range.Select(i => x.Select((v, j) => vectors[j][i] * v).Sum()).ToArray();
+            return range.Select(i => Math.Abs(joltage[i] - resx[i])).Sum();
+        }))
         {
-            var nt = combination.ToArray();
-            nt[v]++;
-            stack.Push(nt);
-            backtrack.Push(v);
+            hash = ComputeHash(c);
+            if (!visitedCache.Contains(hash))
+            stack.Push(c);
         }
     }
     if (!found)
