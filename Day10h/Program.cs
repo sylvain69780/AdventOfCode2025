@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 
 var inputFile = "test1.txt";
-inputFile = "input.txt";
+//inputFile = "input.txt";
 var input = File.ReadAllLines(inputFile)
     .Select(line => line.Split(' '))
     .Select(line => (diagrams: line[0][1..^1], wiring: line[1..^1].Select(x => x[1..^1].Split(',').Select(x => int.Parse(x)).ToArray()).ToArray(), joltage: line[^1][1..^1].Split(',').Select(x => int.Parse(x)).ToArray()))
@@ -19,23 +19,30 @@ Console.WriteLine(count);
 static int Solve(int[][] wiring, int[] joltage)
 {
     var watch = Stopwatch.StartNew();
-    Console.WriteLine(string.Join(',', joltage));
     var range = Enumerable.Range(0, joltage.Length);
 
-    var backtrack = new Stack<int>();
-    backtrack.Push(0);
-    var found = false;
+    var pressed = int.MaxValue;
+    var cardinality = range.Select(i => wiring.Sum(w => w.Contains(i) ? 1 : 0)).ToArray();
+    var remaping = joltage.Select((a, i) => (a, i)).OrderBy(x => x.a).Select((x, j) => (j, x.i)).ToDictionary(x => x.i, x => x.j);
+    Array.Sort(joltage);
+    wiring = wiring.Select(v => v.Select(i => remaping[i]).OrderBy(i => i).ToArray())
+        .OrderBy(v => v[0])
+        .ThenByDescending(v => v.Length)
+        .ToArray();
     var vectors = wiring.Select(w => range.Select(i => w.Contains(i) ? 1 : 0).ToArray()).ToArray();
+    Console.WriteLine(string.Join(',', joltage));
+    foreach (var w in wiring)
+        Console.WriteLine(string.Join(',', w));
     foreach (var v in vectors)
         Console.WriteLine(string.Join('-', v));
-    var stack = new Stack<int[]>();
-    stack.Push(joltage);
-    var pressed = int.MaxValue;
-    while (stack.Count > 0)
+
+    var stack = new Stack<(int pressed, int joltIndex, int vectorIndex, int[] errors)>();
+    stack.Push((0, 0, 0, joltage));
+    var found = false;
+    while (!found)
     {
-        var errors = stack.Pop();
-        var currentPressed = backtrack.Pop();
-        if (currentPressed >= pressed)
+        var (currentPressed, joltIndex, vectorIndex, errors) = stack.Pop();
+        if (currentPressed >= pressed || errors.Any(x => x < 0))
             continue;
         if (errors.All(a => a == 0))
         {
@@ -44,22 +51,21 @@ static int Solve(int[][] wiring, int[] joltage)
             Console.WriteLine($"best = {pressed}");
             continue;
         }
-        var column = errors
-            .Select((e, i) => i)
-            .Where(i => errors[i] != 0)
-            .OrderBy(i => errors[i]).First();
 
-        var candidates = vectors
-            .OrderBy(v => v.Length)
-            .Select((v, i) => i)
-            .Where(i => vectors[i][column] == 1 && !vectors[i].Where((v,col) => vectors[i][col] == 1 && errors[col] == 0).Any());
-        
-        foreach(var v in candidates)
+        if (errors[joltIndex] == 0) // col is full next !
         {
-            stack.Push(errors.Zip(vectors[v], (e, v) => e -v).ToArray());
-            backtrack.Push(currentPressed + 1);
+            if (vectorIndex + 1 == vectors.Length)
+                continue;
+            vectorIndex++;
+            while (vectorIndex + 1 < vectors.Length && vectors[vectorIndex][joltIndex] == 1)
+                vectorIndex++;
+            joltIndex++;
         }
-
+        //if (joltIndex == errors.Length || errors[joltIndex] < 0)
+        //    continue; // no solution
+        if (vectorIndex + 1 < vectors.Length)
+            stack.Push((currentPressed + 1, joltIndex, vectorIndex + 1, errors.Zip(vectors[vectorIndex+1], (a, b) => a - b).ToArray()));
+        stack.Push((currentPressed + 1, joltIndex, vectorIndex, errors.Zip(vectors[vectorIndex], (a, b) => a - b).ToArray()));
     }
     if (!found)
         throw new Exception("No solution");
