@@ -1,7 +1,8 @@
-﻿using System.Diagnostics;
+﻿using System.ComponentModel;
+using System.Diagnostics;
 
 var inputFile = "test1.txt";
-//inputFile = "input.txt";
+inputFile = "input.txt";
 var input = File.ReadAllLines(inputFile)
     .Select(line => line.Split(' '))
     .Select(line => (diagrams: line[0][1..^1], wiring: line[1..^1].Select(x => x[1..^1].Split(',').Select(x => int.Parse(x)).ToArray()).ToArray(), joltage: line[^1][1..^1].Split(',').Select(x => int.Parse(x)).ToArray()))
@@ -36,14 +37,13 @@ static int Solve(int[][] wiring, int[] joltage)
     foreach (var v in vectors)
         Console.WriteLine(string.Join('-', v));
 
-    var stack = new Stack<(int pressed, int joltIndex, int vectorIndex, int[] errors)>();
-    stack.Push((0, 0, 0, joltage));
     var found = false;
+    var combination = new int[vectors.Length];
+    var index = 0;
     while (!found)
     {
-        var (currentPressed, joltIndex, vectorIndex, errors) = stack.Pop();
-        if (currentPressed >= pressed || errors.Any(x => x < 0))
-            continue;
+        var errors = joltage.Select((jol, ijol) => jol - vectors.Select((ve,ive) => ve[ijol] * combination[ive]).Sum()).ToArray();
+        var currentPressed = combination.Sum();
         if (errors.All(a => a == 0))
         {
             found = true;
@@ -52,20 +52,19 @@ static int Solve(int[][] wiring, int[] joltage)
             continue;
         }
 
-        if (errors[joltIndex] == 0) // col is full next !
+        index = 0;
+        while(true)
         {
-            if (vectorIndex + 1 == vectors.Length)
-                continue;
-            vectorIndex++;
-            while (vectorIndex + 1 < vectors.Length && vectors[vectorIndex][joltIndex] == 1)
-                vectorIndex++;
-            joltIndex++;
+            combination[index]++;
+            var err = joltage.Select((jol, ijol) => jol - vectors.Select((ve, ive) => ve[ijol] * combination[ive]).Sum());
+            if (err.Any(x => x < 0))
+            {
+                combination[index] = 0;
+                index++;
+            }
+            else
+                break;
         }
-        //if (joltIndex == errors.Length || errors[joltIndex] < 0)
-        //    continue; // no solution
-        if (vectorIndex + 1 < vectors.Length)
-            stack.Push((currentPressed + 1, joltIndex, vectorIndex + 1, errors.Zip(vectors[vectorIndex+1], (a, b) => a - b).ToArray()));
-        stack.Push((currentPressed + 1, joltIndex, vectorIndex, errors.Zip(vectors[vectorIndex], (a, b) => a - b).ToArray()));
     }
     if (!found)
         throw new Exception("No solution");
