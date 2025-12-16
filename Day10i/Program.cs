@@ -2,7 +2,7 @@
 using System.Diagnostics;
 
 var inputFile = "test1.txt";
-inputFile = "input.txt";
+//inputFile = "input.txt";
 var input = File.ReadAllLines(inputFile)
     .Select(line => line.Split(' '))
     .Select(line => (diagrams: line[0][1..^1], wiring: line[1..^1].Select(x => x[1..^1].Split(',').Select(x => int.Parse(x)).ToArray()).ToArray(), joltage: line[^1][1..^1].Split(',').Select(x => int.Parse(x)).ToArray()))
@@ -27,8 +27,9 @@ static int Solve(int[][] wiring, int[] joltage)
     var remaping = joltage.Select((a, i) => (a, i)).OrderBy(x => x.a).Select((x, j) => (j, x.i)).ToDictionary(x => x.i, x => x.j);
     Array.Sort(joltage);
     wiring = wiring.Select(v => v.Select(i => remaping[i]).OrderBy(i => i).ToArray())
-        .OrderBy(v => v[0])
-        .ThenByDescending(v => v.Length)
+        //.OrderByDescending(v => v[0])
+        // .ThenByDescending(v => v.Length)
+        .OrderByDescending(v => v.Length)
         .ToArray();
     var vectors = wiring.Select(w => range.Select(i => w.Contains(i) ? 1 : 0).ToArray()).ToArray();
     Console.WriteLine(string.Join(',', joltage));
