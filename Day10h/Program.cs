@@ -49,7 +49,8 @@ static int Solve(int[][] wiring, int[] joltage)
             found = true;
             pressed = currentPressed;
             Console.WriteLine($"best = {pressed}");
-            continue;
+            break;
+            // continue;
         }
 
         index = 0;
