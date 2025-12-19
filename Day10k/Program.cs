@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 
 var inputFile = "test1.txt";
-//inputFile = "input.txt";
+// inputFile = "input.txt";
 var input = File.ReadAllLines(inputFile)
     .Select(line => line.Split(' '))
     .Select(line => (diagrams: line[0][1..^1], wiring: line[1..^1].Select(x => x[1..^1].Split(',').Select(x => int.Parse(x)).ToArray()).ToArray(), joltage: line[^1][1..^1].Split(',').Select(x => int.Parse(x)).ToArray()))
@@ -27,7 +27,6 @@ static int Solve(int[][] wiring, int[] joltage)
     foreach (var w in wiring)
         Console.WriteLine(string.Join(',', w));
     Print(equations);
-    var found = false;
 
     var usedEquations = new List<int[]>();
     for (var index = 0; index < wiring.Length; index++)
@@ -45,13 +44,45 @@ static int Solve(int[][] wiring, int[] joltage)
         }
         Print(equations);
     }
-    return 0;
+    var found = true;
+    while (found)
+    {
+        found = false;
+        foreach (var equ in equations.Where(e => e.SkipLast(1).Where(x => x != 0).Count() == 1))
+        {
+            var v = equ[..^1].Where(x => x != 0).First();
+            var i = Array.IndexOf(equ[..^1], v);
+            if (v != 1)
+            {
+                equ[^1] /= equ[i];
+                equ[i] = 1;
+            }
+            for (var j = 0; j<joltage.Length; j++)
+            {
+                if (equations[j] == equ)
+                    continue;
+                if (equations[j][i] != 0)
+                {
+                    found = true;
+                    equations[j][^1] = equations[j][^1] - equ[^1] * equations[j][i];
+                    equations[j][i] = 0;
+                }
+            }
+        }
+    }
+
+    equations = [.. equations.OrderByDescending(e => e[..^1].Where(x => x == 0).Count())];
+
+    Print(equations);
+
+
+    return equations.Select(e => e[^1]).Sum();
 
     static void Print(int[][] equations)
     {
         Console.WriteLine();
         for (var ii = 0; ii < equations.Length; ii++)
-            Console.WriteLine($"{string.Join('+', equations[ii][..^1].Select((e, i) => (e, i)).Select(x => $" {x.e}*x{x.i} "))} = {equations[ii][^1]}");
+            Console.WriteLine($"{string.Join('+', equations[ii][..^1].Select((e, i) => (e, i)).Where(x => x.e != 0).Select(x => $" {x.e}*x{x.i}"))} = {equations[ii][^1]}");
     }
 }
 
