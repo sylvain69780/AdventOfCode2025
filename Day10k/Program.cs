@@ -1,7 +1,8 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 
 var inputFile = "test1.txt";
-// inputFile = "input.txt";
+inputFile = "input.txt";
 var input = File.ReadAllLines(inputFile)
     .Select(line => line.Split(' '))
     .Select(line => (diagrams: line[0][1..^1], wiring: line[1..^1].Select(x => x[1..^1].Split(',').Select(x => int.Parse(x)).ToArray()).ToArray(), joltage: line[^1][1..^1].Split(',').Select(x => int.Parse(x)).ToArray()))
@@ -28,46 +29,35 @@ static int Solve(int[][] wiring, int[] joltage)
         Console.WriteLine(string.Join(',', w));
     Print(equations);
 
-    var usedEquations = new List<int[]>();
-    for (var index = 0; index < wiring.Length; index++)
-    {
-        if (equations.Where(e => !usedEquations.Contains(e) && e[index] != 0).Count() < 2)
-            continue;
-        var e1 = equations.Where(e => !usedEquations.Contains(e) && e[index] != 0).First();
-        usedEquations.Add(e1);
-        foreach (var e2 in equations.Where(e => !usedEquations.Contains(e) && e[index] != 0))
-        {
-            for (var i = 0; i <= wiring.Length; i++)
-                if (i != index)
-                    e2[i] = e2[i] * e1[index] - e1[i] * e2[index];
-            e2[index] = 0;
-        }
-        Print(equations);
-    }
     var found = true;
     while (found)
     {
         found = false;
-        foreach (var equ in equations.Where(e => e.SkipLast(1).Where(x => x != 0).Count() == 1))
+        foreach (var equ in equations.Where(e => !e.All(x => x == 0)))
         {
-            var v = equ[..^1].Where(x => x != 0).First();
-            var i = Array.IndexOf(equ[..^1], v);
-            if (v != 1)
+            var helperEquation = equations.Where(e => !e.All(x => x == 0)).Where(e => e != equ && !e.SkipLast(1).Where((x, i) => equ[i] == 0 && x != 0).Any()).FirstOrDefault();
+            if (helperEquation is not null)
             {
-                equ[^1] /= equ[i];
-                equ[i] = 1;
+                found = true;
+                var (v, index) = equ.SkipLast(1).Select((v, i) => (v, i)).Where(x => x.v != 0 && helperEquation[x.i] != 0).First();
+                for (var i = 0; i <= wiring.Length; i++)
+                    if (i != index)
+                        equ[i] = equ[i] * helperEquation[index] - helperEquation[i] * equ[index];
+                equ[index] = 0;
+                Print(equations);
             }
-            for (var j = 0; j<joltage.Length; j++)
-            {
-                if (equations[j] == equ)
-                    continue;
-                if (equations[j][i] != 0)
-                {
-                    found = true;
-                    equations[j][^1] = equations[j][^1] - equ[^1] * equations[j][i];
-                    equations[j][i] = 0;
-                }
-            }
+        }
+
+    }
+
+    foreach (var equ in equations.Where(e => e.SkipLast(1).Where(x => x != 0).Count() == 1))
+    {
+        var v = equ[..^1].Where(x => x != 0).First();
+        var i = Array.IndexOf(equ[..^1], v);
+        if (v != 1)
+        {
+            equ[^1] /= equ[i];
+            equ[i] = 1;
         }
     }
 
@@ -82,7 +72,8 @@ static int Solve(int[][] wiring, int[] joltage)
     {
         Console.WriteLine();
         for (var ii = 0; ii < equations.Length; ii++)
-            Console.WriteLine($"{string.Join('+', equations[ii][..^1].Select((e, i) => (e, i)).Where(x => x.e != 0).Select(x => $" {x.e}*x{x.i}"))} = {equations[ii][^1]}");
+            if (!equations[ii].All(x => x == 0))
+                Console.WriteLine($"{string.Join('+', equations[ii][..^1].Select((e, i) => (e, i)).Where(x => x.e != 0).Select(x => $" {x.e}*x{x.i}"))} = {equations[ii][^1]}");
     }
 }
 
