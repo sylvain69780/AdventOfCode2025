@@ -2,7 +2,7 @@
 using System.Diagnostics;
 
 var inputFile = "test1.txt";
-//inputFile = "input.txt";
+inputFile = "input.txt";
 var input = File.ReadAllLines(inputFile)
     .Select(line => line.Split(' '))
     .Select(line => (diagrams: line[0][1..^1], wiring: line[1..^1].Select(x => x[1..^1].Split(',').Select(x => int.Parse(x)).ToArray()).ToArray(), joltage: line[^1][1..^1].Split(',').Select(x => int.Parse(x)).ToArray()))
@@ -31,6 +31,7 @@ static int Solve(int[][] wiring, int[] joltage)
     stack.Push((0, new int[wiring.Length]));
     var watch = Stopwatch.StartNew();
     var pressed = int.MaxValue;
+    var maxValues = wiring.Select((_, i) => equations.Where(x => x.w.Contains(i)).Min(x => x.j)).ToArray();
     while (stack.Count > 0)
     {
         var (index, n) = stack.Pop();
@@ -48,10 +49,30 @@ static int Solve(int[][] wiring, int[] joltage)
         }
         if (index >= n.Length)
             continue;
+        if (equations.Where(x => x.w.Count == 1 && x.w[0] == index).Any())
+        {
+            var e = equations.Where(x => x.w.Count == 1 && x.w[0] == index).First();
+            n[index] = e.j;
+            stack.Push((index + 1, n.ToArray()));
+            continue;
+        }
+        if (equations.Where(x => x.w.Contains(index) && x.w.All(y => y <= index)).Any())
+        {
+            var e = equations.Where(x => x.w.Contains(index) && x.w.All(y => y <= index)).First();
+            var v = e.j - e.w.SkipLast(1).Select(i => n[i]).Sum();
+            if (v < 0)
+                continue;
+            n[index] = v;
+            stack.Push((index + 1, n.ToArray()));
+            continue;
+        }
+
         stack.Push((index + 1, n.ToArray()));
         if (equations.All(e => !e.w.Contains(index)))
             continue;
         while (true)
+
+
         {
             n[index]++;
             errors = equations.Select(e => e.j - e.w.Select(w => n[w]).Sum());
@@ -109,4 +130,6 @@ static void PrintEquations(List<(int j, List<int> n)> equations)
         if (equations[i].n.Count != 0)
             Console.WriteLine($"{string.Join('+', equations[i].n.Select(n => $"n{n}"))} = {equations[i].j}");
     Console.WriteLine(new String('-',30));
+
+    Console.WriteLine(new String('-', 30));
 }
