@@ -34,11 +34,14 @@ static int Solve(int[][] wiring, int[] joltage)
     var maxValues = wiring.Select((_, i) => equations.Where(x => x.w.Contains(i)).Min(x => x.j)).ToArray();
     while (stack.Count > 0)
     {
+        // on regarde chaque slot
+        // on regarde l'equation
+        // 
         var (index, n) = stack.Pop();
         var currentPressed = n.Sum();
         if (currentPressed > pressed)
             continue;
-        var errors = equations.Select(e => e.j - e.w.Select(w => n[w]).Sum() );
+        var errors = equations.Select(e => e.j - e.w.Select(w => n[w]).Sum() ).ToArray();
         if (errors.All(x => x == 0))
         {
             found = true;
@@ -56,26 +59,24 @@ static int Solve(int[][] wiring, int[] joltage)
             stack.Push((index + 1, n.ToArray()));
             continue;
         }
-        if (equations.Where(x => x.w.Contains(index) && x.w.All(y => y <= index)).Any())
-        {
-            var e = equations.Where(x => x.w.Contains(index) && x.w.All(y => y <= index)).First();
-            var v = e.j - e.w.SkipLast(1).Select(i => n[i]).Sum();
-            if (v < 0)
-                continue;
-            n[index] = v;
-            stack.Push((index + 1, n.ToArray()));
-            continue;
-        }
+        //if (equations.Where(x => x.w.Contains(index) && x.w.All(y => y <= index)).Any())
+        //{
+        //    var e = equations.Where(x => x.w.Contains(index) && x.w.All(y => y <= index)).First();
+        //    var v = e.j - e.w.SkipLast(1).Select(i => n[i]).Sum();
+        //    if (v < 0)
+        //        continue;
+        //    n[index] = v;
+        //    stack.Push((index + 1, n.ToArray()));
+        //    continue;
+        //}
 
         stack.Push((index + 1, n.ToArray()));
         if (equations.All(e => !e.w.Contains(index)))
             continue;
         while (true)
-
-
         {
             n[index]++;
-            errors = equations.Select(e => e.j - e.w.Select(w => n[w]).Sum());
+            errors = equations.Select(e => e.j - e.w.Select(w => n[w]).Sum()).ToArray();
             if (errors.Min() < 0)
                 break;
             stack.Push((index + 1, n.ToArray()));

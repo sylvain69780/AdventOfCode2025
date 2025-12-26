@@ -33,7 +33,7 @@ static int Solve(int[][] wiring, int[] joltage)
     var pressed = int.MaxValue;
     var dist = int.MaxValue;
     var dependsOn = joltage.
-        Select((_, i) => (i, w: wiring.Where(w => w.Contains(i))))
+        Select((_, i) => (i, w: wiring.Where(w => w.Contains(i)).ToArray()))
         .ToDictionary(x => x.i, x => x.w);
     while (!found)
     {
@@ -48,7 +48,12 @@ static int Solve(int[][] wiring, int[] joltage)
             break;
             //continue;
         }
-        if (errors.Any(e => e<0) || errors.Where((e,i) => e > dependsOn[i].Select(w => w.Select(j => errors[j]).Min()).Max()).Any())
+        //if (errors.Any(e => e<0) || errors.Where((e,i) => e > dependsOn[i].Select(w => w.Select(j => errors[j]).Min()).Max()).Any())
+        //    continue;
+        if (errors.Any(e => e < 0))
+            continue;
+        var maxAmount = wiring.Select((w, i) => w.Select(pos => errors[pos]).Min()).ToArray();
+        if (errors.Select((e,i) => dependsOn[i].Select(w => w.Select(a => maxAmount[a]).Sum())
             continue;
         foreach (var w in wiring.OrderBy(w => w.Length))
         {
@@ -59,7 +64,8 @@ static int Solve(int[][] wiring, int[] joltage)
             // on regarde les slots un par un on note la quantité Q à ajouter
             // on regarde les pièces nécessaires (dependsOn) possibles pour remplir ce slot
             // on doit avoir Q = n1 + n2 donc Q <= Max(n1) + Max(n2) 
-
+            // problème avec cette approve, il peut y avoir des dependances entre n1 et n2, et prend le max n'est pas ok
+            // ca peut permettre d'eliminer des choses donc essayons
 
 
                 var newErrors = errors.Select((e, i) => w.Contains(i) ? e - 1 : e).ToArray();
