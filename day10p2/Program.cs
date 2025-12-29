@@ -38,6 +38,7 @@ static int Solve(int[][] wiring, int[] joltage)
         {
             Console.WriteLine(new string('-', 30));
             Console.WriteLine(string.Join('-', combinaison1));
+            Console.WriteLine(new string('-', 30));
             return combinaison1.Sum();
         }
         var i = 0;

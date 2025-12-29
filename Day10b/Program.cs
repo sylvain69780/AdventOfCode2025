@@ -23,6 +23,8 @@
  * Si on ne peux pas y mettre une pièce on est donc bloqué
  * On doit faire un graphe pour eviter ces interbloquages
  * 
+ * On voit qu'on est bloqué lorsqu'un coordonnée ne peux pas être augmentée (dependance avec autres coordonnées pleines)
+ * 
  * 
  */
 
@@ -53,11 +55,6 @@ static int Solve(int[][] wiring, int[] joltage)
 
     var stack = new Stack<int[]>();
     stack.Push(new int[wiring.Length]);
-
-    // colonnes et vecteurs connectés associés
-    //var dependsOn = joltage.
-    //Select((_, i) => (i, w: wiring.Where(w => w.Contains(i)).ToArray()))
-    //.ToDictionary(x => x.i, x => x.w);
 
     while (stack.Count > 0)
     {
