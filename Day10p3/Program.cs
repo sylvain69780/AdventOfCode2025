@@ -1,10 +1,7 @@
-﻿/*
- * Marche en avant pour trouver un combinaison qui fonctionne.
- * On utilise les plus grands vecteurs d'abord
- */
+﻿using System.Diagnostics;
 
 var inputFile = "test1.txt";
-//inputFile = "input.txt";
+inputFile = "input.txt";
 var input = File.ReadAllLines(inputFile)
     .Select(line => line.Split(' '))
     .Select(line => (diagrams: line[0][1..^1], wiring: line[1..^1].Select(x => x[1..^1].Split(',').Select(x => int.Parse(x)).ToArray()).ToArray(), joltage: line[^1][1..^1].Split(',').Select(x => int.Parse(x)).ToArray()))
@@ -13,57 +10,37 @@ var input = File.ReadAllLines(inputFile)
 var count = 0;
 foreach (var (_, wiring, joltage) in input)
 {
+    var watch = Stopwatch.StartNew();
     Console.WriteLine(string.Join(',', joltage));
-    foreach (var w in wiring)
-        Console.WriteLine(string.Join(',', w));
     int pressed = Solve(wiring, joltage);
     count += pressed;
+    watch.Stop();
+    Console.WriteLine($"Elapsed {watch.ElapsedMilliseconds}ms");
 }
 
 Console.WriteLine(count);
 
 static int Solve(int[][] wiring, int[] joltage)
 {
-    wiring = wiring.OrderBy(w => w.Length).ToArray();
-
-    var stack = new Stack<int[]>();
-    stack.Push(new int[wiring.Length]);
-    while (stack.Count > 0)
+    foreach (var w in wiring)
+        Console.WriteLine(string.Join(',', w));
+    var count = 0;
+    while (joltage.Any(x => x > 0))
     {
-        var combinaison1 = stack.Pop();
-        var errors = joltage.Select((v, col) => v - wiring.Select((w, c) => combinaison1[c] * (w.Contains(col) ? 1 : 0)).Sum()).ToArray();
-        if (errors.Any(e => e < 0))
-            continue;
-        if (errors.All(e => e == 0))
-        {
-            Console.WriteLine(new string('-', 30));
-            Console.WriteLine(string.Join('-', combinaison1));
-            Console.WriteLine(new string('-', 30));
-            return combinaison1.Sum();
-        }
-        var blocked = false;
-        for (var i = 0; i < errors.Length; i++)
-        {
-            var error = errors[i];
-            if (error != 0)
-                continue;
-            for (var j = 0; j < wiring.Length; j++)
-            {
-                if (!wiring[j].Contains(i))
-                    continue;
-
-            }
-        }
-        if (blocked)
-            continue;
-        var count = 0;
+        count++;
+        var options = new List<int[]>();
         foreach (var w in wiring)
         {
-            var combinaison = combinaison1.ToArray();
-            combinaison[count++]++;
-            stack.Push(combinaison);
+            var newValue = joltage.Select((v, col) => v - (w.Contains(col) ? 1 : 0)).ToArray();
+            if (newValue.All(v => v >= 0))
+                options.Add(newValue);
         }
+        joltage = options
+            .OrderBy(x => x.Sum(y => (y - x.Min())*(y - x.Min())))
+            .First();
+        Console.WriteLine(string.Join (",", joltage));
     }
-    throw new Exception("Not found");
+    Console.WriteLine($"Solution = {count}");
+    return count;
 }
 
