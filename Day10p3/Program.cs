@@ -25,20 +25,33 @@ static int Solve(int[][] wiring, int[] joltage)
     foreach (var w in wiring)
         Console.WriteLine(string.Join(',', w));
     var count = 0;
-    while (joltage.Any(x => x > 0))
+    var stack = new Stack<(int depth, int[] errors)>();
+    stack.Push((0, joltage));
+    var error = int.MaxValue;
+    while (true)
     {
-        count++;
+        var (depth, errors) = stack.Pop();
+        var newError = errors.Max();
+        if (newError < error)
+        {
+            error = newError;
+            Console.WriteLine(string.Join(",", errors));
+        }
+        depth++;
         var options = new List<int[]>();
         foreach (var w in wiring)
         {
-            var newValue = joltage.Select((v, col) => v - (w.Contains(col) ? 1 : 0)).ToArray();
+            var newValue = errors.Select((v, col) => v - (w.Contains(col) ? 1 : 0)).ToArray();
+            if (newValue.All(x => x == 0))
+                return depth;
             if (newValue.All(v => v >= 0))
                 options.Add(newValue);
         }
-        joltage = options
-            .OrderBy(x => x.Sum(y => (y - x.Min())*(y - x.Min())))
-            .First();
-        Console.WriteLine(string.Join (",", joltage));
+//        foreach (var o in options.OrderBy(x => x.Sum(y => (y - x.Min())*(y - x.Min()))))
+        foreach (var o in options.OrderByDescending(x => x.Sum(y => (y+100)*(y+100))))
+        {
+            stack.Push((depth, o));
+        }
     }
     Console.WriteLine($"Solution = {count}");
     return count;

@@ -95,6 +95,7 @@ static int Solve(int[][] wiring, int[] joltage)
                 (2,7,9)
                 (1,5)
                 {69,70,57,68,59,60,70,84,46,75}
+                  6  6  6  5  6
 
                 on peut utiliser v0 (qui skip slot8) jusqu'à slot2=57 
                 sauf qu'ensuite on pourra pas utiliser v1 et v2 qui ont besoin de slot2
